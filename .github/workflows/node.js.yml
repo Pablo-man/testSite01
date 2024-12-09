@@ -1,5 +1,4 @@
-name: Deploy node app
-
+name: Astro CD
 on:
   push:
     branches: [ "main" ]
@@ -9,12 +8,24 @@ jobs:
 
     runs-on: self-hosted
 
+    
     steps:
     - uses: actions/checkout@v3
-    - name: Use Node.js
+    - name: Use Node
       uses: actions/setup-node@v3
       with:
-        node-version: '18'
-
+        node-version: "18"
     - run: npm i
     - run: npm run build --if-present
+
+  clean:
+    runs-on: self-hosted
+    needs: [build]
+    steps:
+    - name: Clean up directory except 'dist'
+      run: |
+        find . -mindepth 1 ! -path './dist*' -exec rm -rf {} + 2>/dev/null || true
+
+    - name: Restart Nginx container
+      run: |
+        docker restart nginx
